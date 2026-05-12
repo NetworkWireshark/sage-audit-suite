@@ -62,6 +62,39 @@ uploads/
    npm run desktop:dev
    ```
 
+## Run in GitHub Codespaces
+
+1. Open the repository:
+
+   ```text
+   https://github.com/NetworkWireshark/sage-audit-suite
+   ```
+
+2. Click `Code` -> `Codespaces` -> `Create codespace on main`.
+3. Wait for the container setup to finish. It installs Python, backend packages, and frontend packages automatically.
+4. In the Codespaces terminal, start the backend:
+
+   ```bash
+   python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+5. Open a second terminal and start the frontend:
+
+   ```bash
+   npm --prefix frontend run dev -- --host 0.0.0.0 --port 5173
+   ```
+
+6. Open the forwarded `5173` port from the `Ports` tab. The web app will load in the browser.
+
+Default login:
+
+```text
+admin@sage.local
+Admin123!
+```
+
+You can also run both services from VS Code with `Terminal` -> `Run Task` -> `Run web app`.
+
 ## Default users
 
 - Admin: `admin@sage.local` / `Admin123!`
@@ -108,4 +141,3 @@ The engine:
 - `backend/app/models/entities.py`: persistence model ready for multi-company fields.
 - Repository/service boundaries can be switched to SQL Server-backed implementations without changing the frontend contract.
 - Konica scan-folder polling can be added as a background worker that writes to the existing upload/comparison flow.
-
