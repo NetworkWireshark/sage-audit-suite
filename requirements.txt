@@ -1,0 +1,16 @@
+fastapi>=0.115
+uvicorn[standard]>=0.34
+python-multipart>=0.0.20
+sqlalchemy>=2.0
+pydantic-settings>=2.8
+python-jose[cryptography]>=3.4
+bcrypt<5
+pandas>=2.2
+openpyxl>=3.1
+xlrd>=2.0.1
+pytesseract>=0.3.13
+pdf2image>=1.17
+Pillow>=11.0
+reportlab>=4.3
+rapidfuzz>=3.12
+httpx>=0.28

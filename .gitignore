@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+sage_audit.db
+node_modules/
+frontend/node_modules/
+frontend/dist/
+reports/*
+!reports/.gitkeep
+uploads/*
+!uploads/.gitkeep
