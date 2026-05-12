@@ -31,6 +31,8 @@ def parse_document(path: Path) -> pd.DataFrame:
         frame = parse_pdf(path)
     else:
         raise ValueError(f"Unsupported file type: {suffix}")
+    if frame.empty:
+        raise ValueError(f"No tabular rows could be read from {path.name}")
     return canonicalize(frame)
 
 
@@ -124,6 +126,8 @@ def canonicalize(frame: pd.DataFrame) -> pd.DataFrame:
             )
         )
     ]
+    if frame.empty:
+        raise ValueError("No usable line items were found in the uploaded document")
     return frame
 
 

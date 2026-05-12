@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Download, LogOut, Search, ShieldCheck } from "lucide-react";
+import AuditTable from "../components/AuditTable";
 import { downloadReport, runComparison, uploadComparisonFiles } from "../lib/api";
 import ErrorTable from "../components/ErrorTable";
 import Sidebar from "../components/Sidebar";
@@ -18,12 +19,22 @@ const emptyDashboard = {
   sage_total: 0,
   difference_total: 0,
   issues: [],
+  audit_lines: [],
 };
+
+const auditFilters = [
+  { value: "all", label: "All lines" },
+  { value: "matched", label: "Matched" },
+  { value: "matched_with_differences", label: "Differences" },
+  { value: "missing_in_document", label: "Missing" },
+  { value: "extra_in_document", label: "Extra" },
+];
 
 export default function DashboardPage({ session, onLogout }) {
   const [dashboard, setDashboard] = useState(emptyDashboard);
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("all");
+  const [auditStatus, setAuditStatus] = useState("all");
   const [status, setStatus] = useState("Ready for upload.");
   const [busy, setBusy] = useState(false);
   const [exporting, setExporting] = useState("");
@@ -36,6 +47,10 @@ export default function DashboardPage({ session, onLogout }) {
       return matchesQuery && matchesSeverity;
     });
   }, [dashboard.issues, query, severity]);
+
+  const filteredAuditLines = useMemo(() => {
+    return dashboard.audit_lines.filter((line) => auditStatus === "all" || line.status === auditStatus);
+  }, [auditStatus, dashboard.audit_lines]);
 
   async function handleUpload(payload) {
     setBusy(true);
@@ -139,6 +154,32 @@ export default function DashboardPage({ session, onLogout }) {
               </div>
             </div>
             <ErrorTable issues={filteredIssues} />
+          </section>
+
+          <section className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-white">Complete audit trail</h2>
+                <p className="text-sm text-slate-400">Review every Sage and document line used in the comparison.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {auditFilters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setAuditStatus(filter.value)}
+                    className={`rounded border px-3 py-2 text-sm font-medium transition ${
+                      auditStatus === filter.value
+                        ? "border-aqua bg-aqua text-slate-950"
+                        : "border-line bg-panel text-slate-200 hover:border-aqua"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <AuditTable lines={filteredAuditLines} />
           </section>
         </main>
       </div>

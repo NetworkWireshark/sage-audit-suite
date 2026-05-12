@@ -33,6 +33,26 @@ class IssueResponse(BaseModel):
     message: str
 
 
+class AuditLineResponse(BaseModel):
+    id: int
+    status: str
+    match_method: str
+    confidence: float
+    sage_article_code: str | None
+    sage_description: str | None
+    sage_quantity: float | None
+    sage_unit: str | None
+    sage_unit_price: float | None
+    sage_total: float | None
+    document_article_code: str | None
+    document_description: str | None
+    document_quantity: float | None
+    document_unit: str | None
+    document_unit_price: float | None
+    document_total: float | None
+    notes: str | None
+
+
 class DashboardResponse(BaseModel):
     comparison_id: int
     matched_count: int
@@ -46,6 +66,7 @@ class DashboardResponse(BaseModel):
     difference_total: float
     created_at: datetime
     issues: list[IssueResponse]
+    audit_lines: list[AuditLineResponse] = []
 
 
 class CompareResponse(DashboardResponse):

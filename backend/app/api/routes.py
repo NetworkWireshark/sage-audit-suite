@@ -1,5 +1,4 @@
 from pathlib import Path
-from shutil import copyfileobj
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
@@ -9,13 +8,15 @@ from sqlalchemy.orm import Session
 from ..core.config import settings
 from ..db.dependencies import get_current_user, get_db, require_admin
 from ..models.entities import ComparisonRun, UploadBatch, User
-from ..schemas.contracts import CompareResponse, DashboardResponse, IssueResponse, TokenResponse, UploadResponse, UserResponse
+from ..schemas.contracts import AuditLineResponse, CompareResponse, DashboardResponse, IssueResponse, TokenResponse, UploadResponse, UserResponse
 from ..services.auth import authenticate_user, issue_token
 from ..services.comparison import compare_upload_batch
 from ..services.reporting import export_excel, export_pdf
 
 
 api_router = APIRouter()
+ALLOWED_UPLOAD_SUFFIXES = {".csv", ".xls", ".xlsx", ".pdf"}
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
 @api_router.post("/auth/login", response_model=TokenResponse)
@@ -115,14 +116,22 @@ def admin_ping(_: User = Depends(require_admin)) -> dict[str, str]:
 
 def persist_upload(upload: UploadFile) -> Path:
     safe_name = Path(upload.filename or "document.bin").name.replace(" ", "_")
+    if Path(safe_name).suffix.lower() not in ALLOWED_UPLOAD_SUFFIXES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV, XLS, XLSX, and PDF uploads are supported")
     destination = settings.upload_dir / safe_name
     stem, suffix = destination.stem, destination.suffix
     counter = 1
     while destination.exists():
         destination = settings.upload_dir / f"{stem}-{counter}{suffix}"
         counter += 1
+    bytes_written = 0
     with destination.open("wb") as buffer:
-        copyfileobj(upload.file, buffer)
+        while chunk := upload.file.read(1024 * 1024):
+            bytes_written += len(chunk)
+            if bytes_written > MAX_UPLOAD_BYTES:
+                destination.unlink(missing_ok=True)
+                raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Upload exceeds the 25 MB limit")
+            buffer.write(chunk)
     return destination
 
 
@@ -159,5 +168,27 @@ def serialize_dashboard(comparison: ComparisonRun) -> DashboardResponse:
                 message=issue.message,
             )
             for issue in comparison.issues
+        ],
+        audit_lines=[
+            AuditLineResponse(
+                id=line.id,
+                status=line.status,
+                match_method=line.match_method,
+                confidence=line.confidence,
+                sage_article_code=line.sage_article_code,
+                sage_description=line.sage_description,
+                sage_quantity=line.sage_quantity,
+                sage_unit=line.sage_unit,
+                sage_unit_price=line.sage_unit_price,
+                sage_total=line.sage_total,
+                document_article_code=line.document_article_code,
+                document_description=line.document_description,
+                document_quantity=line.document_quantity,
+                document_unit=line.document_unit,
+                document_unit_price=line.document_unit_price,
+                document_total=line.document_total,
+                notes=line.notes,
+            )
+            for line in comparison.audit_lines
         ],
     )

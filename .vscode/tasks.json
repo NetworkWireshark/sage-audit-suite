@@ -2,23 +2,104 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Run backend",
-      "type": "shell",
-      "command": "python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000",
-      "isBackground": true,
+      "label": "Install backend deps",
+      "type": "process",
+      "command": "python",
+      "args": ["-m", "pip", "install", "-r", "requirements.txt"],
+      "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
     {
-      "label": "Run frontend",
-      "type": "shell",
-      "command": "npm --prefix frontend run dev -- --host 0.0.0.0 --port 5173",
-      "isBackground": true,
+      "label": "Install frontend deps",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["--prefix", "frontend", "install"],
+      "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
+    },
+    {
+      "label": "Start backend",
+      "type": "process",
+      "command": "python",
+      "args": ["-m", "uvicorn", "backend.app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "uvicorn",
+          "fileLocation": "absolute",
+          "pattern": [{ "regexp": "^(.*)$", "message": 1 }],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^(.*)$",
+            "endsPattern": "Uvicorn running on"
+          }
+        }
+      ],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Start frontend",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["--prefix", "frontend", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "vite",
+          "fileLocation": "absolute",
+          "pattern": [{ "regexp": "^(.*)$", "message": 1 }],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^(.*)$",
+            "endsPattern": "Local:\\s+http://"
+          }
+        }
+      ],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Start electron",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["run", "desktop:dev"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": false,
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Build",
+      "type": "process",
+      "command": "npm.cmd",
+      "args": ["run", "build:web"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
     },
     {
       "label": "Run web app",
+      "dependsOn": [
+        "Start backend",
+        "Start frontend"
+      ],
       "dependsOrder": "parallel",
-      "dependsOn": ["Run backend", "Run frontend"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Run desktop app",
+      "dependsOn": [
+        "Start backend",
+        "Start frontend",
+        "Start electron"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean",
+      "type": "shell",
+      "command": "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue .venv, node_modules, frontend/node_modules",
       "problemMatcher": []
     }
   ]

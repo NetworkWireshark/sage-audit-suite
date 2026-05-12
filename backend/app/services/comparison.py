@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import defaultdict, deque
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,26 +31,31 @@ def compare_upload_batch(db: Session, upload_batch: UploadBatch) -> ComparisonRu
     issues: list[ComparisonIssue] = []
     audit_lines: list[ComparisonAuditLine] = []
     matched_count = 0
-    document_by_code = {row.norm_code: row for row in document.itertuples()}
-    document_descriptions = {row.norm_description: row for row in document.itertuples()}
+    document_by_code = group_rows_by_key(document.itertuples(), "norm_code")
+    document_descriptions = {row.norm_description: row for row in document.itertuples() if row.norm_description}
     used_document_indexes: set[int] = set()
 
     issues.extend(detect_duplicates(sage, "sage"))
     issues.extend(detect_duplicates(document, "document"))
 
     for sage_row in sage.itertuples():
-        match = document_by_code.get(sage_row.norm_code)
+        match = next_unused_match(document_by_code.get(sage_row.norm_code), used_document_indexes)
         match_method = "article_code" if match is not None and sage_row.norm_code else "none"
         confidence = 100.0 if match is not None and sage_row.norm_code else 0.0
         if match is None and sage_row.norm_description:
+            available_descriptions = {
+                description: row
+                for description, row in document_descriptions.items()
+                if row.Index not in used_document_indexes
+            }
             candidate = process.extractOne(
                 sage_row.norm_description,
-                document_descriptions.keys(),
+                available_descriptions.keys(),
                 scorer=fuzz.ratio,
                 score_cutoff=78,
             )
             if candidate:
-                match = document_descriptions[candidate[0]]
+                match = available_descriptions[candidate[0]]
                 match_method = "description_fuzzy"
                 confidence = float(candidate[1])
 
@@ -133,6 +140,25 @@ def enrich(frame: pd.DataFrame) -> pd.DataFrame:
     frame["norm_code"] = frame["article_code"].map(normalize_code)
     frame["norm_description"] = frame["description"].map(normalize_text)
     return frame
+
+
+def group_rows_by_key(rows: Iterable[object], key_name: str) -> dict[str, deque[object]]:
+    grouped: dict[str, deque[object]] = defaultdict(deque)
+    for row in rows:
+        key = getattr(row, key_name, "")
+        if key:
+            grouped[key].append(row)
+    return grouped
+
+
+def next_unused_match(candidates: deque[object] | None, used_indexes: set[int]) -> object | None:
+    if not candidates:
+        return None
+    while candidates:
+        candidate = candidates.popleft()
+        if candidate.Index not in used_indexes:
+            return candidate
+    return None
 
 
 def detect_duplicates(frame: pd.DataFrame, source: str) -> list[ComparisonIssue]:

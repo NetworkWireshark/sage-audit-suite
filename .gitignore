@@ -2,6 +2,7 @@
 .venv/
 __pycache__/
 *.pyc
+*.log
 sage_audit.db
 node_modules/
 frontend/node_modules/
