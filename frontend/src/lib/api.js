@@ -1,7 +1,23 @@
 import axios from "axios";
 
+function resolveApiBaseUrl() {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  if (typeof window !== "undefined") {
+    const { hostname, protocol } = window.location;
+    const codespacesHost = hostname.match(/^(?<name>.+)-(?<port>\d+)\.app\.github\.dev$/);
+    if (codespacesHost?.groups?.name) {
+      return `${protocol}//${codespacesHost.groups.name}-8000.app.github.dev/api`;
+    }
+  }
+
+  return "http://127.0.0.1:8000/api";
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api",
+  baseURL: resolveApiBaseUrl(),
 });
 
 api.interceptors.request.use((config) => {

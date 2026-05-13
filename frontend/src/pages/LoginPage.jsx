@@ -15,8 +15,14 @@ export default function LoginPage({ onAuthenticated }) {
     try {
       const session = await login(email, password);
       onAuthenticated({ email: session.email, role: session.role });
-    } catch {
-      setError("Authentication failed.");
+    } catch (requestError) {
+      if (requestError?.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else if (requestError?.response?.data?.detail) {
+        setError(requestError.response.data.detail);
+      } else {
+        setError("Cannot reach the API. Check that the backend is running on port 8000.");
+      }
     } finally {
       setBusy(false);
     }
