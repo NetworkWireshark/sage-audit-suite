@@ -12,7 +12,8 @@
     {
       "label": "Install frontend deps",
       "type": "process",
-      "command": "npm.cmd",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
       "args": ["--prefix", "frontend", "install"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
@@ -41,7 +42,8 @@
     {
       "label": "Start frontend",
       "type": "process",
-      "command": "npm.cmd",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
       "args": ["--prefix", "frontend", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"],
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
@@ -62,7 +64,8 @@
     {
       "label": "Start electron",
       "type": "process",
-      "command": "npm.cmd",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
       "args": ["run", "desktop:dev"],
       "options": { "cwd": "${workspaceFolder}" },
       "isBackground": false,
@@ -71,7 +74,8 @@
     {
       "label": "Build",
       "type": "process",
-      "command": "npm.cmd",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
       "args": ["run", "build:web"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": [],
@@ -99,7 +103,10 @@
     {
       "label": "Clean",
       "type": "shell",
-      "command": "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue .venv, node_modules, frontend/node_modules",
+      "command": "rm -rf .venv node_modules frontend/node_modules",
+      "windows": {
+        "command": "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue .venv, node_modules, frontend/node_modules"
+      },
       "problemMatcher": []
     }
   ]
