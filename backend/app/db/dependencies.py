@@ -11,7 +11,7 @@ from .session import SessionLocal
 from ..core.config import settings
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_v1_prefix}/auth/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_v1_prefix}/auth/login")
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -22,23 +22,12 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def get_current_user(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if not token and settings.app_env == "development":
-        user = db.query(User).filter(User.email == settings.default_admin_email).first()
-        if user:
-            return user
-        user = User(email=settings.default_admin_email, hashed_password="", role="admin", is_active=True)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-    if not token:
-        raise credentials_error
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
         email = payload.get("sub")
