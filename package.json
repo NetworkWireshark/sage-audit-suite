@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "main": "electron/main.cjs",
   "scripts": {
+    "dev:api": "python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:web": "npm --prefix frontend run dev",
+    "dev:network": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "build:web": "npm --prefix frontend run build",
     "preview:web": "npm --prefix frontend run preview",
     "desktop": "electron .",

@@ -42,7 +42,7 @@ uploads/
 4. Start the API:
 
    ```powershell
-   python -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+   python -m uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 5. Install frontend dependencies:
@@ -58,10 +58,22 @@ uploads/
    npm run dev:web
    ```
 
-7. Open the web app:
+   Or start both services together:
+
+   ```powershell
+   npm run dev:network
+   ```
+
+7. Open the web app locally:
 
    ```text
    http://127.0.0.1:5173
+   ```
+
+   From another device on the same network, open:
+
+   ```text
+   http://<this-computer-ip>:5173
    ```
 
 8. Start the Electron desktop shell in development when needed:

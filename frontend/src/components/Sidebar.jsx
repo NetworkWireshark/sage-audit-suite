@@ -1,14 +1,11 @@
-import { BarChart3, Building2, Database, FileSearch, FolderSync } from "lucide-react";
+import { BarChart3, Building2 } from "lucide-react";
 
 const items = [
-  { icon: BarChart3, label: "Dashboard" },
-  { icon: FileSearch, label: "Comparisons" },
-  { icon: FolderSync, label: "Scan folders" },
-  { icon: Database, label: "Data sources" },
-  { icon: Building2, label: "Companies" },
+  { id: "dashboard", icon: BarChart3, label: "Dashboard" },
+  { id: "companies", icon: Building2, label: "Companies" },
 ];
 
-export default function Sidebar({ session }) {
+export default function Sidebar({ session, activePage, onPageChange }) {
   return (
     <aside className="border-r border-line bg-panel px-4 py-5">
       <div className="border-b border-line pb-5">
@@ -16,11 +13,13 @@ export default function Sidebar({ session }) {
         <h2 className="mt-2 text-2xl font-semibold text-white">Control center</h2>
       </div>
       <nav className="mt-6 space-y-2">
-        {items.map(({ icon: Icon, label }, index) => (
+        {items.map(({ id, icon: Icon, label }) => (
           <button
             key={label}
+            type="button"
+            onClick={() => onPageChange(id)}
             className={`flex w-full items-center gap-3 rounded border px-3 py-3 text-left text-sm transition ${
-              index === 0 ? "border-aqua bg-aqua/10 text-white" : "border-transparent text-slate-300 hover:border-line hover:bg-panelSoft"
+              activePage === id ? "border-aqua bg-aqua/10 text-white" : "border-transparent text-slate-300 hover:border-line hover:bg-panelSoft"
             }`}
           >
             <Icon className="h-4 w-4" />

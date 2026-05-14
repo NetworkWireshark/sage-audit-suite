@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { FileSpreadsheet, ScanLine, UploadCloud } from "lucide-react";
 
-export default function UploadPanel({ onSubmit, busy, status }) {
+export default function UploadPanel({ onSubmit, busy, status, companies = [], companyKey = "default", onCompanyKeyChange }) {
   const [sageFile, setSageFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
-  const [companyKey, setCompanyKey] = useState("default");
+  const selectedCompanyKey = companyKey || "default";
 
   function captureFile(event, setter) {
     event.preventDefault();
@@ -19,7 +19,7 @@ export default function UploadPanel({ onSubmit, busy, status }) {
     if (!sageFile || !documentFile) {
       return;
     }
-    onSubmit({ sageFile, documentFile, companyKey });
+    onSubmit({ sageFile, documentFile, companyKey: selectedCompanyKey });
   }
 
   return (
@@ -31,7 +31,17 @@ export default function UploadPanel({ onSubmit, busy, status }) {
         </div>
         <label className="text-sm text-slate-300">
           Company key
-          <input value={companyKey} onChange={(event) => setCompanyKey(event.target.value)} className="ml-3 rounded border border-line bg-ink px-3 py-2 text-white outline-none focus:border-aqua" />
+          <input
+            value={selectedCompanyKey}
+            list="company-key-options"
+            onChange={(event) => onCompanyKeyChange?.(event.target.value)}
+            className="ml-3 rounded border border-line bg-ink px-3 py-2 text-white outline-none focus:border-aqua"
+          />
+          <datalist id="company-key-options">
+            {companies.map((company) => (
+              <option key={company.key} value={company.key} label={company.name} />
+            ))}
+          </datalist>
         </label>
       </div>
       <form onSubmit={submit} className="space-y-4">
